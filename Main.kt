@@ -1,16 +1,27 @@
 package minesweeper
 
+import kotlin.system.exitProcess
+
 var field = Array(9) { CharArray(9) { '.' } }
+var hideField = Array(field.size) { field[it].clone() }
+var mines = 0
+var hits = 0
 
 fun main() {
     initField()
+    hideField = Array(field.size) { field[it].clone() }
     fillFieldWithHints()
-    printField()
+    while (true) {
+        println()
+        printField()
+        shot()
+    }
 }
 
 fun initField() {
     print("How many mines do you want on the field? ")
-    val mines = readln().toInt()
+
+    mines = readln().toInt()
     val selectedNumbers = mutableListOf<Int>()
     while (selectedNumbers.size < mines) {
         val randomNumber = (1..81).random()
@@ -24,12 +35,17 @@ fun initField() {
 }
 
 fun printField() {
-    for (i in field) {
-        for (y in i) {
-            print(y)
+    println(" |123456789|")
+    println("-|---------|")
+    for (i in 0 until field.size) {
+        print("${i + 1}|")
+        for (y in 0 until field[i].size) {
+            print(field[i][y])
         }
+        print("|")
         println()
     }
+    println("-|---------|")
 }
 
 fun fillFieldWithHints() {
@@ -95,5 +111,32 @@ fun fillFieldWithHints() {
                 field[i][y] = count.digitToChar()
             }
         }
+    }
+    for (i in 0 until field.size) {
+        for (y in 0 until field[i].size) {
+            if (field[i][y] == 'X') {
+                field[i][y] = '.'
+            }
+        }
+    }
+}
+
+fun shot() {
+    if (hits == mines) {
+        println("Congratulations! You found all the mines!")
+        exitProcess(0)
+    }
+    print("Set/delete mines marks (x and y coordinates): ")
+    val (yShot, xShot) = readln().split(" ").map { it.toInt() }
+    if (hideField[xShot - 1][yShot - 1] == 'X') {
+        hits++
+        field[xShot - 1][yShot - 1] = '*'
+    } else if (field[xShot - 1][yShot - 1].isDigit()) {
+        println("There is a number here!")
+        shot()
+    } else if (field[xShot - 1][yShot - 1] == '*') {
+        field[xShot - 1][yShot - 1] = '.'
+    } else {
+        field[xShot - 1][yShot - 1] = '*'
     }
 }
