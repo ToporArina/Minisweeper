@@ -9,8 +9,9 @@ var hits = 0
 
 fun main() {
     initField()
-    hideField = Array(field.size) { field[it].clone() }
     fillFieldWithHints()
+    hideField = Array(field.size) { field[it].clone() }
+    field = Array(9) { CharArray(9) { '.' } }
     while (true) {
         println()
         printField()
@@ -37,7 +38,7 @@ fun initField() {
 fun printField() {
     println(" |123456789|")
     println("-|---------|")
-    for (i in 0 until field.size) {
+    for (i in field.indices) {
         print("${i + 1}|")
         for (y in 0 until field[i].size) {
             print(field[i][y])
@@ -49,8 +50,8 @@ fun printField() {
 }
 
 fun fillFieldWithHints() {
-    var count = 0
-    for (i in 0 until field.size) {
+    var count: Int
+    for (i in field.indices) {
         for (y in 0 until field[i].size) {
             if (field[i][y] == 'X') {
                 continue
@@ -112,13 +113,6 @@ fun fillFieldWithHints() {
             }
         }
     }
-    for (i in 0 until field.size) {
-        for (y in 0 until field[i].size) {
-            if (field[i][y] == 'X') {
-                field[i][y] = '.'
-            }
-        }
-    }
 }
 
 fun shot() {
@@ -126,17 +120,138 @@ fun shot() {
         println("Congratulations! You found all the mines!")
         exitProcess(0)
     }
-    print("Set/delete mines marks (x and y coordinates): ")
-    val (yShot, xShot) = readln().split(" ").map { it.toInt() }
-    if (hideField[xShot - 1][yShot - 1] == 'X') {
-        hits++
-        field[xShot - 1][yShot - 1] = '*'
-    } else if (field[xShot - 1][yShot - 1].isDigit()) {
-        println("There is a number here!")
-        shot()
-    } else if (field[xShot - 1][yShot - 1] == '*') {
-        field[xShot - 1][yShot - 1] = '.'
+
+    print("Set/unset mines marks or claim a cell as free: ")
+
+    val answ = readln().split(" ")
+    val y = answ[0].toInt() - 1
+    val x = answ[1].toInt() - 1
+    val mark = answ[2]
+    if (mark == "mine") {
+        if (hideField[x][y] == 'X' && field[x][y] == '.') {
+            hits++
+            field[x][y] = '*'
+        } else if (hideField[x][y] == 'X' && field[x][y] == '*') {
+            hits--
+            field[x][y] = '.'
+        } else if (field[x][y] == '*') {
+            field[x][y] = '.'
+        } else {
+            field[x][y] = '*'
+        }
     } else {
-        field[xShot - 1][yShot - 1] = '*'
+        if (hideField[x][y].isDigit()) {
+            field[x][y] = hideField[x][y]
+        } else if (hideField[x][y] == 'X') {
+            for (i in hideField.indices) {
+                for (z in 0 until hideField[i].size) {
+                    if (hideField[i][z] == 'X') {
+                        field[i][z] = hideField[i][z]
+                    }
+                }
+            }
+            println()
+            printField()
+            println("You stepped on a mine and failed!")
+            exitProcess(0)
+        } else {
+            field[x][y] = '/'
+            hideField[x][y] = '/'
+            checkAround()
+        }
+    }
+}
+
+fun checkAround() {
+    for (i in field.indices) {
+        for (y in field.indices) {
+            try {
+                if (field[i][y] == '/' && hideField[i - 1][y] == '.') {
+                    field[i - 1][y] = '/'
+                    hideField[i - 1][y] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i - 1][y].isDigit()) {
+                    field[i - 1][y] = hideField[i - 1][y]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i + 1][y] == '.') {
+                    field[i + 1][y] = '/'
+                    hideField[i + 1][y] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i + 1][y].isDigit()) {
+                    field[i + 1][y] = hideField[i + 1][y]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i][y - 1] == '.') {
+                    field[i][y - 1] = '/'
+                    hideField[i][y - 1] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i][y - 1].isDigit()) {
+                    field[i][y - 1] = hideField[i][y - 1]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i][y + 1] == '.') {
+                    field[i][y + 1] = '/'
+                    hideField[i][y + 1] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i][y + 1].isDigit()) {
+                    field[i][y + 1] = hideField[i][y + 1]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i + 1][y + 1] == '.') {
+                    field[i + 1][y + 1] = '/'
+                    hideField[i + 1][y + 1] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i + 1][y + 1].isDigit()) {
+                    field[i + 1][y + 1] = hideField[i + 1][y + 1]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i - 1][y - 1] == '.') {
+                    field[i - 1][y - 1] = '/'
+                    hideField[i - 1][y - 1] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i - 1][y - 1].isDigit()) {
+                    field[i - 1][y - 1] = hideField[i - 1][y - 1]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i + 1][y - 1] == '.') {
+                    field[i + 1][y - 1] = '/'
+                    hideField[i + 1][y - 1] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i + 1][y - 1].isDigit()) {
+                    field[i + 1][y - 1] = hideField[i + 1][y - 1]
+                }
+            } catch (_: Exception) {
+            }
+
+            try {
+                if (field[i][y] == '/' && hideField[i - 1][y + 1] == '.') {
+                    field[i - 1][y + 1] = '/'
+                    hideField[i - 1][y + 1] = '/'
+                    checkAround()
+                } else if (field[i][y] == '/' && hideField[i - 1][y + 1].isDigit()) {
+                    field[i - 1][y + 1] = hideField[i - 1][y + 1]
+                }
+            } catch (_: Exception) {
+            }
+        }
     }
 }
